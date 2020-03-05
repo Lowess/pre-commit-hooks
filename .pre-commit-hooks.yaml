@@ -1,0 +1,22 @@
+---
+- id: ansible-molecule-lint
+  name: Ansible YAML lint check
+  language: docker_image
+  exclude: .*
+  always_run: true
+  entry: lowess/drone-molecule:latest molecule lint
+
+- id: ansible-molecule-syntax
+  name: Ansible systax check
+  language: docker_image
+  exclude: .*
+  always_run: true
+  entry: lowess/drone-molecule:latest molecule syntax
+
+- id: prepare-commit-message
+  name: Prepare commit message
+  entry: prepare-commit-message
+  language: python
+  pass_filenames: true
+  always_run: true
+  types: [text]
