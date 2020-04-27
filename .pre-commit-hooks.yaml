@@ -24,7 +24,7 @@
 - id: terragrunt-hclfmt
   name: Terragrunt HCL format
   language: docker_image
-  exclude: .*
   always_run: true
+  files: .*(.hcl)$
   entry: lowess/terragrunt:0.12.24 terragrunt hclfmt
 
