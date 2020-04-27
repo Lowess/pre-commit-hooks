@@ -23,8 +23,15 @@
 
 - id: terragrunt-hclfmt
   name: Terragrunt HCL format
+  files: \.hcl$
+  language: docker_image
+  entry: lowess/terragrunt:0.12.24 terragrunt hclfmt
+
+- id: terraform-fmt
+  name: Terraform format
+  files: \.tf$
+  exclude: \.+.terraform\/.*$
   language: docker_image
   always_run: true
-  files: .*(.hcl)$
-  entry: lowess/terragrunt:0.12.24 terragrunt hclfmt
+  entry: lowess/terragrunt:0.12.24 terraform fmt
 

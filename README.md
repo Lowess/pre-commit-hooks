@@ -18,6 +18,16 @@ Add this to your `.pre-commit-config.yaml`
 #### `prepare-commit-msg`
 Prepend the branch name to the commit message. If you're using a JIRA project identifier prefix like `{PROJECT_KEY}-{ISSUE_NO}` in your branch name, it will be detected and used instead.
 
+Example configuration:
+```
+  - hooks:
+      - id: prepare-commit-message
+        args: ["--format", "jira", "--jira-projects", "TI,MLE"]
+        stages: [commit-msg]
+    repo: https://github.com/Lowess/pre-commit-hooks
+    rev: v1.0.0
+```
+
 ### DevOps Hooks available
 
 #### `ansible-molecule-lint`
