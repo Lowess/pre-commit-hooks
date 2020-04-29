@@ -35,3 +35,9 @@
   always_run: true
   entry: lowess/terragrunt:0.12.24 terraform fmt
 
+- id: jinja2-render-template
+  name: Render jinja2 template
+  language: docker_image
+  exclude: .*
+  always_run: true
+  entry: lowess/yasha:latest
