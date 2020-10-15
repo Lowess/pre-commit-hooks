@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import random
 import re
 from subprocess import check_output
 from typing import List, Optional, Sequence
@@ -44,6 +45,7 @@ def write_commit_message(filenames: Sequence[str], msg: str) -> int:
 def extract_jira_identifier(regex: str, content: str, allowed: List[str]):
     jira_match = None
     jira_prefix = None
+    jira_key = None
 
     # Try to detect Jira project from content
     jira_match = re.match(regex, content)
@@ -58,7 +60,7 @@ def extract_jira_identifier(regex: str, content: str, allowed: List[str]):
                 "Project key '{}' found but is not allowed by the plugin."
                 " Only the following keys are allowed {}".format(jira_key, allowed)
             )
-            exit(2)
+            return None
 
     if regex == JIRA_BYPASS_REGEX:
         return jira_key
@@ -121,10 +123,15 @@ def format_commit_message(
                 )
 
             if jira_prefix is None:
+                example_jira_patterns = list(
+                    map(lambda x: f"[{x}-{str(random.randint(10, 99))}]", allowed)
+                )
                 logger.error(
-                    "Failed detecting Jira project / ticket number from branch"
-                    " or commit message. You must use a valid pattern like '[MLE-123]'."
-                    " Rejecting commit."
+                    "Failed detecting Jira project / ticket number from branch "
+                    "or commit message. You must use a valid JIRA pattern "
+                    f"like {' '.join(example_jira_patterns)}. If needed, you can also use "
+                    f"one of the skip words {exclude_words} to pass through."
+                    "Rejecting commit."
                 )
                 exit(1)
 
