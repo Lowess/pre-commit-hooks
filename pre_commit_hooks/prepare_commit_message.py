@@ -8,6 +8,7 @@ from typing import List, Optional, Sequence
 
 GIT_MESSAGE_FORMAT = {"default": "[{}] {}", "jira": "[{}] {}"}
 JIRA_PROJECT_BRANCH_REGEX = r"^(?P<gitflow>.*/)?(?P<jira_key>[A-Z]{2,10})-(?P<jira_ticket>[0-9]{1,10})(?=\s|-)(.+)$"
+JIRA_BYPASS_REGEX = r"^\[(?P<jira_key>[A-Z ]{2,10})(?P<jira_ticket>)\](?=\s|-)(.+)$"
 JIRA_PROJECT_COMMIT_REGEX = (
     r"^\[(?P<jira_key>[A-Z]{2,10})-(?P<jira_ticket>[0-9]{1,10})\](?=\s|-)(.+)$"
 )
@@ -40,7 +41,7 @@ def write_commit_message(filenames: Sequence[str], msg: str) -> int:
     return 0
 
 
-def extract_jira_identifier(regex, content, allowed):
+def extract_jira_identifier(regex: str, content: str, allowed: List[str]):
     jira_match = None
     jira_prefix = None
 
@@ -54,22 +55,30 @@ def extract_jira_identifier(regex, content, allowed):
 
         if allowed is not None and jira_key not in allowed:
             logger.error(
-                "Jira project '{}' found but is not allowed by the plugin."
-                " Only the following projects are allowed {}".format(jira_key, allowed)
+                "Project key '{}' found but is not allowed by the plugin."
+                " Only the following keys are allowed {}".format(jira_key, allowed)
             )
             exit(2)
 
-    return jira_prefix
+    if regex == JIRA_BYPASS_REGEX:
+        return jira_key
+    else:
+        return jira_prefix
 
 
 def format_commit_message(
-    msg: str, branch: str, fmt: str, exclude: List[str], allowed: List[str]
+    msg: str,
+    branch: str,
+    fmt: str,
+    exclude_branches: List[str],
+    exclude_words: List[str],
+    allowed: List[str],
 ) -> str:
 
     new_commit_msg = msg
     logger.info("Prepare commit message for '{}' on branch '{}'".format(msg, branch))
 
-    if branch in exclude:
+    if branch in exclude_branches:
         logger.info("Skipped formatting on branch {}".format(branch))
     else:
         if fmt == "default":
@@ -91,6 +100,21 @@ def format_commit_message(
                 jira_prefix = extract_jira_identifier(
                     JIRA_PROJECT_BRANCH_REGEX, branch, allowed
                 )
+
+                if jira_prefix is None:
+                    # Last resort see if msg contains a bypass word
+                    logger.warning(
+                        "Could not find Jira project in branch name"
+                        " checking for words to bypass..."
+                    )
+
+                    jira_prefix = extract_jira_identifier(
+                        JIRA_BYPASS_REGEX, msg, exclude_words
+                    )
+                else:
+                    logger.info(
+                        "Found Jira project in branch name {}".format(jira_prefix)
+                    )
             else:
                 logger.info(
                     "Found Jira project in commit message {}".format(jira_prefix)
@@ -125,11 +149,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "filenames", nargs="*", help="Filenames pre-commit believes are changed.",
     )
     parser.add_argument(
-        "--exclude",
+        "--exclude-words",
+        type=list,
+        default=["NO STORY", "NOSTORY", "NS"],
+        help="The list of words that can be used to ignore formatting",
+    )
+
+    parser.add_argument(
+        "--exclude-branches",
         type=list,
         default=["master", "develop", "stage"],
         help="The list of branches to ignore formatting",
     )
+
     parser.add_argument(
         "--format",
         type=str,
@@ -140,7 +172,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument(
         "--jira-projects",
         type=str,
-        default=None,
+        default="",
         help="Comma separated list of jira projects allowed for this repository",
     )
 
@@ -158,7 +190,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         msg=commit_msg,
         branch=branch,
         fmt=args.format,
-        exclude=args.exclude,
+        exclude_branches=args.exclude_branches,
+        exclude_words=args.exclude_words,
         allowed=args.jira_projects.split(","),
     )
 
