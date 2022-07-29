@@ -41,3 +41,10 @@
   exclude: .*
   always_run: true
   entry: lowess/yasha:latest
+
+- id: npm-test
+  name: Run npm tests
+  language: system
+  files: '\.test.(ts|tsx)$'
+  always_run: true
+  entry: npm run test
