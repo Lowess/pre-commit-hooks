@@ -75,3 +75,15 @@ Example configuration:
     hooks:
       - id: terragrunt-hclfmt
 ```
+### Code Development
+
+#### `npm-test`
+Run [npm-test](https://docs.npmjs.com/cli/v7/commands/npm-test), predefined command specified in the `test` property of a package's `scripts` object.
+
+Example configuration:
+```
+ - hooks:
+      - id: npm-test
+    repo: https://github.com/Lowess/pre-commit-hooks
+    rev: v1.4.0
+```
