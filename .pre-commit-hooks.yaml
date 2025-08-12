@@ -25,7 +25,7 @@
   name: Terragrunt HCL format
   files: \.hcl$
   language: docker_image
-  entry: lowess/terragrunt:0.12.24 terragrunt hclfmt
+  entry: lowess/terragrunt:1.11.2 terragrunt hclfmt
 
 - id: terraform-fmt
   name: Terraform format
@@ -33,7 +33,7 @@
   exclude: \.+.terraform\/.*$
   language: docker_image
   always_run: true
-  entry: lowess/terragrunt:0.12.24 terraform fmt
+  entry: lowess/terragrunt:1.11.2 terraform fmt
 
 - id: jinja2-render-template
   name: Render jinja2 template
